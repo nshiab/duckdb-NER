@@ -38,6 +38,9 @@ patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt
 patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt "add_subdirectory(examples)" "")
 patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt "add_subdirectory(tests)" "")
 
+# Add Wasm specific bypass for ggml architecture detection
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/src/CMakeLists.txt "elseif (UNAME_S MATCHES \"Linux\")" "elseif (UNAME_S MATCHES \"Linux\" AND NOT EMSCRIPTEN)")
+
 # ggml Configuration (inside bert.cpp)
 set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -45,12 +48,12 @@ set(GGML_METAL OFF CACHE BOOL "" FORCE) # Disable metal for CI portability for n
 
 if(EMSCRIPTEN)
     # Wasm specific configuration
-    # Disable native CPU detection which fails in Wasm/Docker
     set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
-    # Enable SIMD for Wasm (requires -msimd128)
+    set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
+    # Use -msimd128 for Wasm SIMD support
     add_compile_options(-msimd128)
-    # Disable thread support if it causes issues in some Wasm environments,
-    # but DuckDB-Wasm usually supports threads.
+    # We want to avoid any native detection in ggml/src/CMakeLists.txt
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGGML_USE_CPU")
 endif()
 
 add_subdirectory(third_party/bert.cpp)
