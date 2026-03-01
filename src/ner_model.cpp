@@ -13,6 +13,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <istream>
 
 struct ner_hparams {
 	int32_t n_vocab = 30522;
@@ -87,6 +88,14 @@ struct ner_ctx {
 	ner_buffer buf_compute;
 };
 
+// Memory stream buffer for loading from memory
+struct memory_buffer : std::streambuf {
+	memory_buffer(const uint8_t *begin, size_t size) {
+		char *p = const_cast<char *>(reinterpret_cast<const char *>(begin));
+		this->setg(p, p, p + size);
+	}
+};
+
 // Simplified tokenizer based on bert.cpp
 void ner_tokenize(struct ner_ctx *ctx, const char *text, ner_vocab_id *tokens, int32_t *n_tokens,
                   int32_t n_max_tokens) {
@@ -150,12 +159,7 @@ void ner_tokenize(struct ner_ctx *ctx, const char *text, ner_vocab_id *tokens, i
 	*n_tokens = t;
 }
 
-struct ner_ctx *ner_load_from_file(const char *fname) {
-	auto fin = std::ifstream(fname, std::ios::binary);
-	if (!fin) {
-		return nullptr;
-	}
-
+static struct ner_ctx *ner_load_internal(std::istream &fin) {
 	uint32_t magic;
 	fin.read((char *)&magic, sizeof(magic));
 	if (magic != 0x67676d6c) {
@@ -171,7 +175,6 @@ struct ner_ctx *ner_load_from_file(const char *fname) {
 	fin.read((char *)&hparams.n_head, sizeof(hparams.n_head));
 	fin.read((char *)&hparams.n_layer, sizeof(hparams.n_layer));
 	fin.read((char *)&hparams.f16, sizeof(hparams.f16));
-	// Check if there is space for n_labels in the header (we'll need our converter to write it)
 	fin.read((char *)&hparams.n_labels, sizeof(hparams.n_labels));
 
 	for (int i = 0; i < hparams.n_vocab; i++) {
@@ -189,7 +192,7 @@ struct ner_ctx *ner_load_from_file(const char *fname) {
 	}
 
 	ggml_type wtype = (hparams.f16 == 2) ? GGML_TYPE_Q4_0 : (hparams.f16 == 1 ? GGML_TYPE_F16 : GGML_TYPE_F32);
-	size_t ctx_size = 512 * 1024 * 1024; // 512MB for tensors, should be enough for BERT-base
+	size_t ctx_size = 512 * 1024 * 1024;
 
 	struct ggml_init_params params = {.mem_size = ctx_size, .mem_buffer = NULL, .no_alloc = false};
 	new_ner->model.ctx = ggml_init(params);
@@ -254,11 +257,11 @@ struct ner_ctx *ner_load_from_file(const char *fname) {
 	while (true) {
 		int32_t n_dims, length, ftype_in;
 		fin.read((char *)&n_dims, sizeof(n_dims));
-		fin.read((char *)&length, sizeof(length));
-		fin.read((char *)&ftype_in, sizeof(ftype_in));
 		if (fin.eof()) {
 			break;
 		}
+		fin.read((char *)&length, sizeof(length));
+		fin.read((char *)&ftype_in, sizeof(ftype_in));
 
 		int64_t ne[2] = {1, 1};
 		for (int i = 0; i < n_dims; i++) {
@@ -280,11 +283,24 @@ struct ner_ctx *ner_load_from_file(const char *fname) {
 		auto *tensor = it->second;
 		fin.read((char *)tensor->data, ggml_nbytes(tensor));
 	}
-	fin.close();
 
 	new_ner->buf_compute.resize(128 * 1024 * 1024); // 128MB compute buffer
-	new_ner->mem_per_token = 1024 * 1024;           // Dummy estimate
+	new_ner->mem_per_token = 1024 * 1024;          // Dummy estimate
 	return new_ner;
+}
+
+struct ner_ctx *ner_load_from_file(const char *fname) {
+	std::ifstream fin(fname, std::ios::binary);
+	if (!fin) {
+		return nullptr;
+	}
+	return ner_load_internal(fin);
+}
+
+struct ner_ctx *ner_load_from_memory(const uint8_t *data, size_t size) {
+	memory_buffer buf(data, size);
+	std::istream fin(&buf);
+	return ner_load_internal(fin);
 }
 
 void ner_free(struct ner_ctx *ctx) {

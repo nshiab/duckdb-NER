@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +14,7 @@ struct ner_ctx;
 typedef int32_t ner_vocab_id;
 
 struct ner_ctx *ner_load_from_file(const char *fname);
+struct ner_ctx *ner_load_from_memory(const uint8_t *data, size_t size);
 void ner_free(struct ner_ctx *ctx);
 
 void ner_tokenize(struct ner_ctx *ctx, const char *text, ner_vocab_id *tokens, int32_t *n_tokens, int32_t n_max_tokens);

@@ -2,6 +2,7 @@
 
 #include "ner_extension.hpp"
 #include "ner_model.hpp"
+#include "default_model.hpp"
 
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
@@ -15,6 +16,7 @@ namespace duckdb {
 struct NerGlobalState {
 	struct ner_ctx *ctx = nullptr;
 	std::string model_path;
+	bool is_default = false;
 };
 
 static NerGlobalState global_state;
@@ -26,6 +28,17 @@ static void LoadModel(const std::string &path) {
 	}
 	global_state.ctx = ner_load_from_file(path.c_str());
 	global_state.model_path = path;
+	global_state.is_default = false;
+}
+
+static void LoadDefaultModel() {
+	if (global_state.ctx) {
+		ner_free(global_state.ctx);
+		global_state.ctx = nullptr;
+	}
+	global_state.ctx = ner_load_from_memory(DEFAULT_MODEL_DATA, DEFAULT_MODEL_SIZE);
+	global_state.model_path = "bundled_tiny_model";
+	global_state.is_default = true;
 }
 
 struct Entity {
@@ -45,6 +58,11 @@ inline void NerScalarFun(DataChunk &args, ExpressionState &state, Vector &result
 		if (trunc_data.validity.RowIsValid(trunc_data.sel->get_index(0))) {
 			truncate_opt = trunc_vals[trunc_data.sel->get_index(0)];
 		}
+	}
+
+	// Lazy load default model if none loaded
+	if (!global_state.ctx) {
+		LoadDefaultModel();
 	}
 
 	if (!global_state.ctx) {
