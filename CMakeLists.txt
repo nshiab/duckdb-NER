@@ -22,15 +22,21 @@ set(BERT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BERT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-# Patch ggml CMakeLists.txt to avoid minimum version error in some environments
-execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.0)/cmake_minimum_required (VERSION 3.12)/" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.5)/cmake_minimum_required (VERSION 3.12)/" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+# Patch submodules to avoid build issues in CI environments
+function(patch_cmake_file file_path search_string replace_string)
+    if(EXISTS ${file_path})
+        file(READ ${file_path} content)
+        string(REPLACE "${search_string}" "${replace_string}" content "${content}")
+        file(WRITE ${file_path} "${content}")
+    endif()
+endfunction()
 
-# Force disable examples and models in bert.cpp submodule by removing the lines
-execute_process(COMMAND sed -i.bak "/add_subdirectory(examples)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "/add_subdirectory(models)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "/add_subdirectory(examples)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "/add_subdirectory(tests)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt "cmake_minimum_required (VERSION 3.0)" "cmake_minimum_required (VERSION 3.12)")
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt "cmake_minimum_required (VERSION 3.5)" "cmake_minimum_required (VERSION 3.12)")
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt "add_subdirectory(examples)" "")
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt "add_subdirectory(models)" "")
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt "add_subdirectory(examples)" "")
+patch_cmake_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt "add_subdirectory(tests)" "")
 
 # ggml Configuration (inside bert.cpp)
 set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)

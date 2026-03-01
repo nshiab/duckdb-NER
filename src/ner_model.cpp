@@ -362,7 +362,8 @@ void ner_eval(struct ner_ctx *ctx, int32_t n_threads, ner_vocab_id *tokens, int3
 		}
 
 		// attention output
-		cur = ggml_add(ctx0, ggml_repeat(ctx0, model.layers[il].o_b, cur), ggml_mul_mat(ctx0, model.layers[il].o_w, cur));
+		cur =
+		    ggml_add(ctx0, ggml_repeat(ctx0, model.layers[il].o_b, cur), ggml_mul_mat(ctx0, model.layers[il].o_w, cur));
 		cur = ggml_add(ctx0, cur, inpL);
 
 		// attention norm
