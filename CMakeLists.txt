@@ -27,11 +27,11 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.0)/cmake_minimum_required (VERSION 3.12)/" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
 execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.5)/cmake_minimum_required (VERSION 3.12)/" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
 
-# Force disable examples and models in bert.cpp submodule if they are still on
-execute_process(COMMAND sed -i.bak "s/if (BERT_BUILD_EXAMPLES)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "s/if (BERT_BUILD_TESTS)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "s/if (GGML_BUILD_EXAMPLES)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
-execute_process(COMMAND sed -i.bak "s/if (GGML_BUILD_TESTS)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+# Force disable examples and models in bert.cpp submodule by removing the lines
+execute_process(COMMAND sed -i.bak "/add_subdirectory(examples)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
+execute_process(COMMAND sed -i.bak "/add_subdirectory(models)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
+execute_process(COMMAND sed -i.bak "/add_subdirectory(examples)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+execute_process(COMMAND sed -i.bak "/add_subdirectory(tests)/d" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
 
 # ggml Configuration (inside bert.cpp)
 set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
