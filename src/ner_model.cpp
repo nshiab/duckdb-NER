@@ -1,4 +1,5 @@
 #include "ner_model.hpp"
+
 #include "ggml.h"
 
 #include <algorithm>
