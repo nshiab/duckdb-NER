@@ -1,0 +1,51 @@
+# name: test/sql/ner.test
+# description: test ner extension
+# group: [sql]
+
+# Before we load the extension, this will fail
+statement error
+SELECT ner('Sam');
+----
+Catalog Error: Scalar Function with name ner does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require ner
+
+# Confirm the extension option exists
+query I
+SELECT value FROM duckdb_settings() WHERE name = 'ner_model_path';
+----
+NULL
+
+# If no model is loaded, it should return empty lists
+query I
+SELECT ner('DuckDB is great');
+----
+[]
+
+# Test alias
+query I
+SELECT ner_extract('DuckDB is great');
+----
+[]
+
+# Test with truncate parameter
+query I
+SELECT ner('DuckDB', true);
+----
+[]
+
+# Test with a non-existent model path
+statement ok
+SET ner_model_path = '/tmp/non_existent_model.bin';
+
+query I
+SELECT value FROM duckdb_settings() WHERE name = 'ner_model_path';
+----
+/tmp/non_existent_model.bin
+
+# Function should still return empty if load failed
+query I
+SELECT ner('DuckDB is great');
+----
+[]

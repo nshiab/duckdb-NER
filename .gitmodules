@@ -6,3 +6,6 @@
 	path = extension-ci-tools
 	url = https://github.com/duckdb/extension-ci-tools
 	branch = main
+[submodule "third_party/bert.cpp"]
+	path = third_party/bert.cpp
+	url = https://github.com/skeskinen/bert.cpp
