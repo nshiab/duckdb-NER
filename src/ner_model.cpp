@@ -370,7 +370,7 @@ void ner_eval(struct ner_ctx *ctx, int32_t n_threads, ner_vocab_id *tokens, int3
 		{
 			cur = ggml_norm(ctx0, cur);
 			cur = ggml_add(ctx0, ggml_mul(ctx0, ggml_repeat(ctx0, model.layers[il].ln_att_w, cur), cur),
-			                ggml_repeat(ctx0, model.layers[il].ln_att_b, cur));
+			               ggml_repeat(ctx0, model.layers[il].ln_att_b, cur));
 		}
 
 		struct ggml_tensor *att_output = cur;
@@ -389,7 +389,7 @@ void ner_eval(struct ner_ctx *ctx, int32_t n_threads, ner_vocab_id *tokens, int3
 		{
 			cur = ggml_norm(ctx0, cur);
 			cur = ggml_add(ctx0, ggml_mul(ctx0, ggml_repeat(ctx0, model.layers[il].ln_out_w, cur), cur),
-			                ggml_repeat(ctx0, model.layers[il].ln_out_b, cur));
+			               ggml_repeat(ctx0, model.layers[il].ln_out_b, cur));
 		}
 
 		inpL = cur;
