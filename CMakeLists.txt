@@ -43,6 +43,16 @@ set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GGML_METAL OFF CACHE BOOL "" FORCE) # Disable metal for CI portability for now
 
+if(EMSCRIPTEN)
+    # Wasm specific configuration
+    # Disable native CPU detection which fails in Wasm/Docker
+    set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
+    # Enable SIMD for Wasm (requires -msimd128)
+    add_compile_options(-msimd128)
+    # Disable thread support if it causes issues in some Wasm environments,
+    # but DuckDB-Wasm usually supports threads.
+endif()
+
 add_subdirectory(third_party/bert.cpp)
 include_directories(third_party/bert.cpp)
 include_directories(third_party/bert.cpp/ggml/include/ggml)
