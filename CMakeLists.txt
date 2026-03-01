@@ -22,6 +22,10 @@ set(BERT_NATIVE OFF CACHE BOOL "" FORCE)
 set(BERT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BERT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
+# Patch ggml CMakeLists.txt to avoid minimum version error in some environments
+execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.0)/cmake_minimum_required (VERSION 3.12)/" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.5)/cmake_minimum_required (VERSION 3.12)/" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+
 # ggml Configuration (inside bert.cpp)
 set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
