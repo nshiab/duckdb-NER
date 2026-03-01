@@ -10,9 +10,6 @@
 #include "duckdb/main/database.hpp"
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
 
-// OpenSSL linked through vcpkg
-#include <openssl/opensslv.h>
-
 namespace duckdb {
 
 struct NerGlobalState {
@@ -153,8 +150,10 @@ inline void NerScalarFun(DataChunk &args, ExpressionState &state, Vector &result
 
 		for (const auto &ent : entities) {
 			ListVector::Reserve(result, current_offset + 1);
-			FlatVector::GetData<string_t>(*entity_vector)[current_offset] = StringVector::AddString(*entity_vector, ent.text);
-			FlatVector::GetData<string_t>(*label_vector)[current_offset] = StringVector::AddString(*label_vector, ent.label);
+			FlatVector::GetData<string_t>(*entity_vector)[current_offset] =
+			    StringVector::AddString(*entity_vector, ent.text);
+			FlatVector::GetData<string_t>(*label_vector)[current_offset] =
+			    StringVector::AddString(*label_vector, ent.label);
 			current_offset++;
 		}
 		result_data[i].length = entities.size();

@@ -88,7 +88,8 @@ struct ner_ctx {
 };
 
 // Simplified tokenizer based on bert.cpp
-void ner_tokenize(struct ner_ctx *ctx, const char *text, ner_vocab_id *tokens, int32_t *n_tokens, int32_t n_max_tokens) {
+void ner_tokenize(struct ner_ctx *ctx, const char *text, ner_vocab_id *tokens, int32_t *n_tokens,
+                  int32_t n_max_tokens) {
 	const auto &vocab = ctx->vocab;
 	const int cls_tok_id = vocab.token_to_id.at("[CLS]");
 	const int sep_tok_id = vocab.token_to_id.at("[SEP]");
@@ -282,7 +283,7 @@ struct ner_ctx *ner_load_from_file(const char *fname) {
 	fin.close();
 
 	new_ner->buf_compute.resize(128 * 1024 * 1024); // 128MB compute buffer
-	new_ner->mem_per_token = 1024 * 1024;          // Dummy estimate
+	new_ner->mem_per_token = 1024 * 1024;           // Dummy estimate
 	return new_ner;
 }
 
@@ -396,8 +397,8 @@ void ner_eval(struct ner_ctx *ctx, int32_t n_threads, ner_vocab_id *tokens, int3
 	// Classifier head: logits = inpL * classifier_weight + classifier_bias
 	// inpL is [n_embd, N], weight is [n_embd, n_labels]
 	// res will be [n_labels, N]
-	struct ggml_tensor *res =
-	    ggml_add(ctx0, ggml_mul_mat(ctx0, model.classifier_weight, inpL), ggml_repeat(ctx0, model.classifier_bias, inpL));
+	struct ggml_tensor *res = ggml_add(ctx0, ggml_mul_mat(ctx0, model.classifier_weight, inpL),
+	                                   ggml_repeat(ctx0, model.classifier_bias, inpL));
 
 	ggml_build_forward_expand(&gf, res);
 	ggml_graph_compute_with_ctx(ctx0, &gf, n_threads);
