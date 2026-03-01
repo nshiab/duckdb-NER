@@ -30,6 +30,8 @@ execute_process(COMMAND sed -i.bak "s/cmake_minimum_required (VERSION 3.5)/cmake
 # Force disable examples and models in bert.cpp submodule if they are still on
 execute_process(COMMAND sed -i.bak "s/if (BERT_BUILD_EXAMPLES)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
 execute_process(COMMAND sed -i.bak "s/if (BERT_BUILD_TESTS)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/CMakeLists.txt)
+execute_process(COMMAND sed -i.bak "s/if (GGML_BUILD_EXAMPLES)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
+execute_process(COMMAND sed -i.bak "s/if (GGML_BUILD_TESTS)/if (FALSE)/g" ${CMAKE_CURRENT_SOURCE_DIR}/third_party/bert.cpp/ggml/CMakeLists.txt)
 
 # ggml Configuration (inside bert.cpp)
 set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
